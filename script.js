@@ -1,11 +1,43 @@
 class Board {
     constructor() {
-        for (var i=0; i<9; i++) {
-            var cell = document.createElement("button");
-            cell.setAttribute("onclick", "player.putStone("+i+")");
-            cell.setAttribute("id", "cell"+i);
-            document.getElementById("grid").appendChild(cell)
+        this.board = [];
+        for (var row=0; row<3; row++) {
+            this.board.push([]);
+            for (var col=0; col<3; col++) {
+                var cell = document.createElement("button");
+                cell.setAttribute("onclick", "player.putStone("+row+","+col+")");
+                cell.setAttribute("id", "cell"+row+col);
+                document.getElementById("grid").appendChild(cell);
+                this.board[row].push(cell);
+            }
+      
         }
+        document.getElementById("gameOver").style.display = "none";
+    }
+
+    movesLeft() {
+        for (var row of this.board) {
+            for (var col of row) {
+                if (col.disabled == false) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    evaluate(stone) {
+        // check rows
+
+        // check cols
+
+        // check diags
+
+    }
+
+    isOver(result) {
+        document.getElementById("result").innerHTML = result;
+        document.getElementById("gameOver").style.display = "block";
     }
 }
 
@@ -14,10 +46,15 @@ class Player {
         this.stone = stone;
     }
 
-    putStone(i) {
-        document.getElementById("cell"+i).innerHTML = this.stone;
-        document.getElementById("cell"+i).disabled = true;
-        computer.putStone()
+    putStone(row, col) {
+        game.board[row][col].innerHTML = this.stone;
+        game.board[row][col].disabled = true;
+        if (game.movesLeft() == true) {
+            computer.putStone();
+        } else {
+            game.isOver("It's a TIE!")
+        }
+        
     }
 }
 
@@ -27,20 +64,30 @@ class Computer extends Player {
     }
 
     putStone() {
-        var i = this.getNextMove();
-        document.getElementById("cell"+i).innerHTML = this.stone;
-        document.getElementById("cell"+i).disabled = true;
+        var cell = this.getNextMove();
+        
+        cell.innerHTML = this.stone;
+        cell.disabled = true;
     }
 
     getNextMove() {
-        var empty = Math.floor(Math.random() * 8);
-        while (document.getElementById("cell"+empty).disabled == true) {
-            empty = Math.floor(Math.random() * 8);
+        var possibleMoves = [];
+        for (var row=0; row<3; row++) {
+            for (var col=0; col<3; col++) {
+                if (game.board[row][col].disabled == false) {
+                    possibleMoves.push(game.board[row][col]);
+                }
+            }
         }
-        return empty;
+        return possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
     }
 }
 
-var board = new Board();
+function newGame() {
+    document.getElementById("grid").innerHTML = "";
+    game = new Board();
+}
+
+var game = new Board();
 var player = new Player("X");
 var computer = new Computer("O");

@@ -14,11 +14,20 @@
                 height: 100px;
                 font-size: 80px;
             }
+            .restartBtn {
+                width: auto;
+                height: auto;
+                font-size: 1rem;
+            }
         </style>
     </head>
     <body>
         <h1>TIC TAC TOE</h1>
         <div id="grid"></div>
+        <div id="gameOver">
+            <h3 id="result"></h3>
+            <button class="restartBtn" onclick="newGame()">New game</button>
+        </div>
         <script src="script.js"></script>
     </body>
 </html>
