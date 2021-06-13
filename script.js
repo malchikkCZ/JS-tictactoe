@@ -1,3 +1,10 @@
+var game;
+var player;
+var computer;
+const grid = document.getElementById("grid");
+const infobox = document.getElementById("infobox")
+
+
 class Board {
     constructor() {
         this.board = [];
@@ -5,27 +12,28 @@ class Board {
             this.board.push([]);
             for (var col=0; col<3; col++) {
                 var cell = document.createElement("button");
-                cell.setAttribute("onclick", "player.putStone("+row+","+col+")");
-                cell.setAttribute("id", "cell"+row+col);
+                cell.setAttribute("onclick", "player.putStone(this)");
                 cell.setAttribute("class", "gridBtn");
-                document.getElementById("grid").appendChild(cell);
+                grid.appendChild(cell);
+                grid.style.display = "grid";
                 this.board[row].push(cell);
             }      
         }
-        document.getElementById("gameOver").style.display = "none";
+        infobox.style.display = "none";
     }
 
-    movesLeft() {
-        for (var row of this.board) {
-            for (var col of row) {
-                if (col.disabled == false) {
-                    return true;
+    possibleMoves() {
+        var possibleMoves = [];
+        for (var row=0; row<3; row++) {
+            for (var col=0; col<3; col++) {
+                if (game.board[row][col].innerHTML == "") {
+                    possibleMoves.push(game.board[row][col]);
                 }
             }
         }
-        return false;
+        return possibleMoves;
     }
-
+    
     evaluate(stone) {
         // check rows
         for (var row of this.board) {
@@ -63,7 +71,7 @@ class Board {
             }
         }
         document.getElementById("result").innerHTML = result;
-        document.getElementById("gameOver").style.display = "flex";
+        infobox.style.display = "flex";
     }
 }
 
@@ -72,16 +80,16 @@ class Player {
         this.stone = stone;
     }
 
-    putStone(row, col) {
-        game.board[row][col].innerHTML = this.stone;
-        game.board[row][col].disabled = true;
+    putStone(cell) {
+        cell.innerHTML = this.stone;
+        cell.disabled = true;
         if (game.evaluate(this.stone) == true) {
-            game.isOver("Player " + this.stone + " is a winner!")
-        } else if (game.movesLeft() == true) {
-            computer.putStone();
+            game.isOver("Player " + this.stone + " is a winner!");
+        } else if (game.possibleMoves().length == 0) {
+            game.isOver("It's a TIE!");
         } else {
-            game.isOver("It's a TIE!")
-        }        
+            setTimeout(() => {computer.putStone(); }, 100);
+        }   
     }
 }
 
@@ -91,8 +99,7 @@ class easyComputer extends Player {
     }
 
     putStone() {
-        var cell = this.getNextMove();
-        
+        var cell = this.getNextMove();        
         cell.innerHTML = this.stone;
         cell.disabled = true;
         if (game.evaluate(this.stone) == true) {
@@ -101,24 +108,84 @@ class easyComputer extends Player {
     }
 
     getNextMove() {
-        var possibleMoves = [];
-        for (var row=0; row<3; row++) {
-            for (var col=0; col<3; col++) {
-                if (game.board[row][col].disabled == false) {
-                    possibleMoves.push(game.board[row][col]);
-                }
-            }
-        }
-        return possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
+        var possibleMoves = game.possibleMoves();
+        return possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
     }
 }
 
+class hardComputer extends easyComputer {
+    constructor(stone) {
+        super(stone);
+    }
 
-function newGame() {
-    document.getElementById("grid").innerHTML = "";
-    game = new Board();
+    getNextMove() {
+        var possibleMoves = game.possibleMoves();
+        if (possibleMoves.length == 9) {
+            return possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+        } else {
+            return this.findBestMove();
+        }
+    }
+
+    findBestMove() {
+        var bestScore = -999;
+        for (var cell of game.possibleMoves()) {
+            cell.innerHTML = this.stone;
+            var score = this.minimax(0, false);
+            cell.innerHTML = "";
+            if (score > bestScore) {
+                var bestMove = cell;
+                bestScore = score;
+            }
+        }
+        return bestMove;
+    }
+
+    minimax(depth, isMax) {
+        if (this.stone == "X") {
+            var otherStone = "O";
+        } else {
+            var otherStone = "X";
+        }
+        if (game.evaluate(this.stone) == true) {
+            return (10 - depth);
+        } else if (game.evaluate(otherStone) == true) {
+            return (-10 + depth);
+        } else if (game.possibleMoves().length == 0) {
+            return 0;
+        }
+        if (isMax == true) {
+            var bestScore = -999;
+            for (var cell of game.possibleMoves()) {
+                cell.innerHTML = this.stone;
+                bestScore = Math.max(bestScore, this.minimax(depth+1, !(isMax)));
+                cell.innerHTML = "";
+            }
+            return bestScore;
+        } else {
+            var bestScore = 999;
+            for (var cell of game.possibleMoves()) {
+                cell.innerHTML = otherStone;
+                bestScore = Math.min(bestScore, this.minimax(depth+1, !(isMax)));
+                cell.innerHTML = "";
+            }
+            return bestScore;
+        }
+    }
 }
 
-var game = new Board();
-var player = new Player("X");
-var computer = new easyComputer("O");
+function newEasyGame() {
+    grid.innerHTML = "";
+    grid.style.display = "none";
+    game = new Board();
+    player = new Player("X");
+    computer = new easyComputer("O");
+}
+
+function newHardGame() {
+    grid.innerHTML = "";
+    grid.style.display = "grid";
+    game = new Board();
+    player = new Player("X");
+    computer = new hardComputer("O");
+}
