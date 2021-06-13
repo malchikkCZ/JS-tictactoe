@@ -9,8 +9,7 @@ class Board {
                 cell.setAttribute("id", "cell"+row+col);
                 document.getElementById("grid").appendChild(cell);
                 this.board[row].push(cell);
-            }
-      
+            }      
         }
         document.getElementById("gameOver").style.display = "none";
     }
@@ -28,14 +27,40 @@ class Board {
 
     evaluate(stone) {
         // check rows
-
+        for (var row of this.board) {
+            if (row.filter(x => x.innerHTML == stone).length == 3) {
+                return true;
+            }
+        }
         // check cols
-
+        var transponed = [];
+        for (var col=0; col<3; col++) {
+            var column = [];
+            for (var row=0; row<3; row++) {
+                column.push(this.board[row][col]);
+            }
+            transponed.push(column);
+        }
+        for (var row of transponed) {
+            if (row.filter(x => x.innerHTML == stone).length == 3) {
+                return true;
+            }
+        }
         // check diags
-
+        var diag1 = [this.board[0][0], this.board[1][1], this.board[2][2]];
+        var diag2 = [this.board[0][2], this.board[1][1], this.board[2][0]];
+        if ((diag1.filter(x => x.innerHTML == stone).length == 3) || (diag2.filter(x => x.innerHTML == stone).length == 3)) {
+            return true;
+        }
+        return false;
     }
 
     isOver(result) {
+        for (var row of this.board) {
+            for (var cell of row) {
+                cell.disabled = true;
+            }
+        }
         document.getElementById("result").innerHTML = result;
         document.getElementById("gameOver").style.display = "block";
     }
@@ -49,16 +74,17 @@ class Player {
     putStone(row, col) {
         game.board[row][col].innerHTML = this.stone;
         game.board[row][col].disabled = true;
-        if (game.movesLeft() == true) {
+        if (game.evaluate(this.stone) == true) {
+            game.isOver("Player " + this.stone + " is a winner!")
+        } else if (game.movesLeft() == true) {
             computer.putStone();
         } else {
             game.isOver("It's a TIE!")
-        }
-        
+        }        
     }
 }
 
-class Computer extends Player {
+class easyComputer extends Player {
     constructor(stone) {
         super(stone);
     }
@@ -68,6 +94,9 @@ class Computer extends Player {
         
         cell.innerHTML = this.stone;
         cell.disabled = true;
+        if (game.evaluate(this.stone) == true) {
+            game.isOver("Player " + this.stone + " is a winner!")
+        }
     }
 
     getNextMove() {
@@ -83,6 +112,7 @@ class Computer extends Player {
     }
 }
 
+
 function newGame() {
     document.getElementById("grid").innerHTML = "";
     game = new Board();
@@ -90,4 +120,4 @@ function newGame() {
 
 var game = new Board();
 var player = new Player("X");
-var computer = new Computer("O");
+var computer = new easyComputer("O");
