@@ -7,6 +7,7 @@ class Board {
                 var cell = document.createElement("button");
                 cell.setAttribute("onclick", "player.putStone("+row+","+col+")");
                 cell.setAttribute("id", "cell"+row+col);
+                cell.setAttribute("class", "gridBtn");
                 document.getElementById("grid").appendChild(cell);
                 this.board[row].push(cell);
             }      
@@ -62,7 +63,7 @@ class Board {
             }
         }
         document.getElementById("result").innerHTML = result;
-        document.getElementById("gameOver").style.display = "block";
+        document.getElementById("gameOver").style.display = "flex";
     }
 }
 
